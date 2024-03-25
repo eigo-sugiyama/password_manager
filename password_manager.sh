@@ -1,11 +1,24 @@
+#step2
 echo パスワードマネージャーへようこそ！
-echo サービス名を入力してください：
-read service_name
-echo ユーザー名を入力してください：
-read user_name
-echo パスワードを入力してください：
-read password
-echo $service_name
-echo $user_name
-echo $password
-echo 'Thank you!'
+echo "次の選択肢から入力してください(Add Password/Get Password/Exit)："
+select input in "Add Password" "Get Password" "Exit"
+case "$input" in
+    "Add Password")
+        echo パスワードマネージャーへようこそ！
+        echo
+        read -p "サービス名を入力してください： " set_service_name
+        read -p "ユーザー名を入力してください： " set_user_name
+        read -s -p "パスワードを入力してください： " set_password
+        echo パスワードの追加は成功しました。
+        ;;
+    "Get Password")
+        read -p "サービス名を入力してください： " get_service_name
+    ;;
+    "Exit"
+    break
+    ;;
+esac
+
+
+
+
