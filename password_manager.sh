@@ -5,6 +5,7 @@ select input in "Add Password" "Get Password" "Exit"
 do
 case "$input" in
     "Add Password")
+        echo
         echo パスワードマネージャーへようこそ！
         echo
         read -p "サービス名を入力してください： " set_service_name
@@ -12,23 +13,39 @@ case "$input" in
         #パスワードを表示させたくなければ、-pオプション
         #read -s -p "パスワードを入力してください： " set_password
         read -p "パスワードを入力してください： " set_password
-        echo -e "ユーザー名: $set_user_name\nパスワード: $set_password" | gpg --encrypt --recipient 'eigo.sugiyama0403@gmail.com' --output "${set_service_name}.gpg"
+        yes | gpg --batch --yes --decrypt --output /tmp/secrets_decrypted.txt secrets.gpg
+        echo "$set_service_name,$set_user_name,$set_password" >> /tmp/secrets_decrypted.txt
+        yes | gpg --batch --yes --encrypt --recipient 'eigo.sugiyama0403@gmail.com' --output secrets.gpg /tmp/secrets_decrypted.txt
+        rm /tmp/secrets_decrypted.txt
         echo パスワードの追加は成功しました。
         ;;
+
     "Get Password")
         read -p "サービス名を入力してください： " get_service_name
-        if [[ -f "$get_service_name.gpg" ]]; then
-                echo "ユーザー名とパスワードは以下の通りです："
-                gpg --decrypt "$get_service_name.gpg"
-        else
+        gpg --decrypt --output /tmp/secrets_decrypted.txt secrets.gpg 
+
+        # 合致するサービス名の行を検索して表示
+        while IFS=, read -r name user password; do
+            if [ "$name" == "$get_service_name" ]; then
+                answer="Service Name: $name\nUser Name: $user\nPassword: $password"
+                break
+            fi
+        done < /tmp/secrets_decrypted.txt
+        # 一時ファイルの削除
+        rm /tmp/secrets_decrypted.txt
+        if [ "$answer" == "" ]; then
             echo "指定されたサービスの情報は見つかりませんでした。"
+        else
+            echo -e "$answer"
         fi
         ;;
+
     "Exit")
         break
         ;;
+
     *)
-        入力が間違えています。Add Password/Get Password/Exit から入力してください。
-    ;;
+        "誤入力です。Add Password/Get Password/Exit から番号で入力してください。"
+        ;;
 esac
 done
